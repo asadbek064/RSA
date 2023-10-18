@@ -6,23 +6,21 @@
 #include <stdio.h>
 #include <math.h>
 
-// Modular exponentiation function to avoid integer overflow
-long long modExp(long long base, long long exp, long long mod) {
+// Montgomery modular exponentiation
+long long montgomeryExp(long long base, long long exp, long long mod) {
     long long result = 1;
     base = base % mod;
-
     while (exp > 0) {
         if (exp % 2 == 1) {
             result = (result * base) % mod;
         }
-        exp = exp >> 1;
         base = (base * base) % mod;
+        exp = exp / 2;
     }
-
     return result;
 }
 
-// Calculate modular multiplicative inverse
+// Calculate modular multiplicative inverse using Extended Euclidean Algorithm
 long long modInverse(long long a, long long m) {
     long long m0 = m, t, q;
     long long x0 = 0;
@@ -64,7 +62,7 @@ int main(void) {
 
     for (i = 0; i < 4; i++) {
         // C = M^E MOD N using modular exponentiation
-        en[i] = modExp(msg[i], E, N);
+        en[i] = montgomeryExp(msg[i], E, N);
         SecCode[i] = en[i];
 
         printf("%d\t\t\t%ld\t\t%d\n", msg[i], en[i], SecCode[i]);
@@ -74,7 +72,7 @@ int main(void) {
 
     for (i = 0; i < 4; i++) {
         // M = C^D MOD N using modular exponentiation
-        de[i] = modExp(SecCode[i], D, N);
+        de[i] = montgomeryExp(SecCode[i], D, N);
         DeMsg[i] = de[i];
 
         printf("%d\t\t\t%d\t\t%ld\t\t\t%d\n", msg[i], SecCode[i], de[i], DeMsg[i]);
