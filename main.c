@@ -5,6 +5,39 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <pthread.h>
+
+
+// RSA parameters
+/* P and Q must be prime numbers and must be very large in real production use */
+#define P (3)
+#define Q (11)
+#define N (P * Q)
+#define Totient ((P - 1) * (Q - 1)) /* Euler's totient function */
+#define E (7)                       /* E must have only one common divisor with Totient */
+
+
+#define NUM_THREADS 4
+
+// brute-force D
+void* bruteForceD(void* args) {
+    long long* result = (long long*)args;
+
+    // Define the range of values to check for D
+    long long start = 1;
+    long long end = N;  // Adjust the upper bound as needed
+
+    for (long long d = start; d <= end; d++) {
+        // Check if (E * d) % Totient == 1 to find D
+        if ((E * d) % Totient == 1) {
+            *result = d;
+            break;  // D found, exit the loop
+        }
+    }
+
+    pthread_exit(NULL);
+}
+
 
 // Montgomery modular exponentiation
 long long montgomeryExp(long long base, long long exp, long long mod) {
@@ -46,26 +79,39 @@ int main(void) {
     int msg[4] = {12, 15, 22, 5};
     long en[4], de[4];
     int SecCode[4], DeMsg[4];
-
-    // RSA parameters
-    /* P and Q must be prime numbers and must be very large in real production use */
-    #define P (3)
-    #define Q (11)
-    #define N (P * Q)
-    #define Totient ((P - 1) * (Q - 1)) /* Euler's totient function */
-    #define E (7)                       /* E must have only one common divisor with Totient */
-    long long D = modInverse(E, Totient);
+    long long D = 0;
 
 
     printf("The following is a simple demonstration of the RSA encryption and decryption algorithm:\n");
     printf("\t Copyright(C) Asadbek Karimov.\n\n");
 
-    for (i = 0; i < 4; i++) {
+    // create an array of thread handles
+    pthread_t threads[NUM_THREADS];
+    long long results[NUM_THREADS];
+
+    // invoke threads
+    for(i = 0; i < NUM_THREADS; i++) {
+        pthread_create(&threads[i], NULL, bruteForceD, &results[i]);
+    }
+
+    // wait for all threads to finish
+    for (i = 0; i < NUM_THREADS; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
+    for (i = 0; i < NUM_THREADS; i++) {
+        if (results[i] > 0) {
+            D = results[i];
+            break;
+        }
+    }
+
+
+     for (i = 0; i < 4; i++) {
         // C = M^E MOD N using modular exponentiation
         en[i] = montgomeryExp(msg[i], E, N);
         SecCode[i] = en[i];
-
-        printf("%d\t\t\t%ld\t\t%d\n", msg[i], en[i], SecCode[i]);
+        printf("%d\t%ld\t%d\n", msg[i], en[i], SecCode[i]);
     }
 
     printf("\noriginal message\tciphertext\tencrypted\t\tdecrypted message\n");
@@ -74,8 +120,7 @@ int main(void) {
         // M = C^D MOD N using modular exponentiation
         de[i] = montgomeryExp(SecCode[i], D, N);
         DeMsg[i] = de[i];
-
-        printf("%d\t\t\t%d\t\t%ld\t\t\t%d\n", msg[i], SecCode[i], de[i], DeMsg[i]);
+        printf("%d\t%d\t%ld\t%d\n", msg[i], SecCode[i], de[i], DeMsg[i]);
     }
 
     getchar();
