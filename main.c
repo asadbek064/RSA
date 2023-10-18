@@ -27,6 +27,8 @@ void* bruteForceD(void* args) {
     long long start = 1;
     long long end = N;  // Adjust the upper bound as needed
 
+    clock_t start_time = clock();
+
     for (long long d = start; d <= end; d++) {
         // Check if (E * d) % Totient == 1 to find D
         if ((E * d) % Totient == 1) {
@@ -34,6 +36,9 @@ void* bruteForceD(void* args) {
             break;  // D found, exit the loop
         }
     }
+
+    clock_t end_time = clock();
+    *result = end_time - start_time;
 
     pthread_exit(NULL);
 }
@@ -122,6 +127,8 @@ int main(void) {
         DeMsg[i] = de[i];
         printf("%d\t%d\t%ld\t%d\n", msg[i], SecCode[i], de[i], DeMsg[i]);
     }
+
+    printf("Total time to crack D: %f seconds\n", (double)D / CLOCKS_PER_SEC);
 
     getchar();
 
