@@ -20,8 +20,8 @@ typedef struct {
 #define P (3)
 #define Q (11)
 #define N (P * Q)
-#define Totient ((P - 1) * (Q - 1)) /* Euler's totient function */
-#define E (7)                       /* E must have only one common divisor with Totient */
+#define Totient ((P - 1LL) * (Q - 1LL)) /* Euler's totient function */
+#define E (7LL)                       /* E must have only one common divisor with Totient */
 
 
 #define NUM_THREADS 4
@@ -90,9 +90,9 @@ long long montgomeryExp(long long base, long long exp, long long mod) {
 int main(void) {
     // Multi Threaded
     int i;
-    int msg[4] = {12, 15, 22, 5};
+    long msg[4] = {12, 15, 22, 5};
     long en[4], de[4];
-    int SecCode[4], DeMsg[4];
+    long SecCode[4], DeMsg[4];
     long long D_MT = 0;
     
 
